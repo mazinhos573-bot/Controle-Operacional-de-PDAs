@@ -8,6 +8,9 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <!-- Gráficos -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
+
+
 
 <style>
 :root { --primary: #2563eb; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --bg: #f3f4f6; --card: #ffffff; }
@@ -39,7 +42,11 @@ h1 { color: #1e293b; margin-bottom: 5px; }
 
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
 input, select, button { padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; box-sizing: border-box; font-size: 14px; transition: 0.2s; }
-input:focus, select:focus { border-color: var(--primary); outline: none; ring: 2px solid var(--primary); }
+input:focus, select:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 2px var(--primary);
+}
 
 .btn { cursor: pointer; border: none; font-weight: bold; color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-primary { background: var(--primary); }
@@ -120,6 +127,7 @@ tr:hover { background: #f8fafc; }
                     <option>Consolidação</option>
                     <option>Expedição</option>
                 </select>
+                <input id="opNumeroPda" placeholder="Número do PDA (ex: 1001)">
                 <input id="opColaborador" placeholder="Nome do Colaborador">
                 <input id="opLogin" placeholder="Login / Matrícula">
                 <!-- Select inteligente preenchido via JS -->
@@ -210,6 +218,63 @@ tr:hover { background: #f8fafc; }
 // --- BANCO DE DADOS (LOCALSTORAGE) ---
 let estoque = JSON.parse(localStorage.getItem("db_estoque")) || []; 
 // Estrutura estoque: { id: "PDA-01", status: "livre" | "uso" }
+// --- PDAs AUTOMÁTICOS JÁ CADASTRADOS ---
+const pdasIniciais = [
+
+  // CHEGADA
+  { id: "SP2T2-TEST 1", login: "2105099801", senha1: "123456a." },
+  { id: "SP2T2-TEST 2", login: "2105099901", senha1: "123456a." },
+  { id: "SP2T2-TEST 3", login: "2105100001", senha1: "123456a." },
+  { id: "SP2T2-TEST 4", login: "2105100101", senha1: "123456a." },
+  { id: "SP2T2-TEST 5", login: "2105100201", senha1: "123456a." },
+
+  // CONSOLIDAÇÃO
+  { id: "SP2T2-1001", login: "2105099801", senha: "123456a." },
+  { id: "SP2T2-1002", login: "2105099901", senha: "123456a." },
+  { id: "SP2T2-1003", login: "2105100001", senha: "123456a." },
+  { id: "SP2T2-1004", login: "2105100101", senha: "123456a." },
+  { id: "SP2T2-1005", login: "2105100201", senha: "123456a." },
+
+  { id: "CONSOLID.RDC SP2 01", login: "2104118401", senha1: "123456a." },
+  { id: "CONSOLID.RDC SP2 02", login: "2104118501", senha1: "123456a." },
+  { id: "CONSOLID.RDC SP2 03", login: "2104118601", senha1: "123456a." },
+  { id: "CONSOLID.RDC SP2 04", login: "2104118701", senha1: "123456a." },
+  { id: "CONSOLID.RDC SP2 05", login: "2104118801", senha1: "123456a." },
+  { id: "CONSOLID.RDC SP2 06", login: "2104118901", senha1: "123456a." },
+
+  // EXPEDIÇÃO
+  { id: "EXPEDIÇÂO RDC-SP2 01", login: "2104124901", senha1: "123456a." },
+  { id: "EXPEDIÇÂO RDC-SP2 02", login: "2104125001", senha1: "123456a." },
+  { id: "EXPEDIÇÂO RDC-SP2 03", login: "2104125101", senha1: "123456a." },
+  { id: "EXPEDIÇÂO RDC-SP2 04", login: "2104125201", senha1: "123456a." },
+
+  { id: "SECUNDARIA EXPED.02", login: "2104119101", senha1: "123456a." },
+  { id: "SECUNDARIA EXPED.03", login: "2104119201", senha1: "123456a." },
+  { id: "SECUNDARIA EXPED.04", login: "2104119301", senha1: "123456a." },
+  { id: "SECUNDARIA EXPED.05", login: "2104119401", senha1: "123456a." },
+  { id: "SECUNDARIA EXPED.06", login: "2104119501", senha1: "123456a." },
+
+  // DONA NUBIA
+  { id: "SECUNDARIA EXPED.07", login: "2104118301", senha1: "123456a." },
+  { id: "SECUNDARIA EXPED.08", login: "2104118201", senha1: "123456a." },
+  { id: "SECUNDARIA EXPED.09", login: "2104118101", senha1: "123456a." },
+  { id: "SECUNDARIA EXPED.10", login: "2104118001", senha1: "123456a." }
+];
+
+// --- INSERIR AUTOMATICAMENTE NO ESTOQUE SEM DUPLICAR ---
+pdasIniciais.forEach(pda => {
+  if (!estoque.find(e => e.id === pda.id)) {
+    estoque.push({
+      id: pda.id,
+      status: "livre",
+      login: pda.login,
+      senha1: pda.senha1,
+      senha2: "",
+      senha3: "",
+      senha4: ""
+    });
+  }
+});
 
 let operacoes = JSON.parse(localStorage.getItem("db_operacoes")) || [];
 // Estrutura op: { id: timestamp, pda: "", colab: "", area: "", login: "", inicio: "", fim: "", qtd: 0, status: "ativo" | "concluido" }
@@ -274,8 +339,9 @@ function removerDoEstoque(id){
 function atualizarSelectPDAs(){
     const select = document.getElementById("opPdaSelect");
     select.innerHTML = '<option value="" disabled selected>Selecione um PDA Disponível</option>';
-    
+
     const disponiveis = estoque.filter(e => e.status === 'livre');
+
     if(disponiveis.length === 0){
         const opt = document.createElement("option");
         opt.text = "Sem PDAs disponíveis";
@@ -286,7 +352,10 @@ function atualizarSelectPDAs(){
     disponiveis.forEach(pda => {
         const opt = document.createElement("option");
         opt.value = pda.id;
-        opt.text = `✅ ${pda.id}`;
+
+        // ✅ Agora mostra também o número/login do PDA
+        opt.text = `✅ ${pda.id} — Login: ${pda.login || ''}`;
+
         select.add(opt);
     });
 }
@@ -297,20 +366,22 @@ function iniciarOperacao(){
     const login = document.getElementById("opLogin").value.trim();
     const pda = document.getElementById("opPdaSelect").value;
 
-    if(!area || !colab || !login || !pda) return toast("Preencha todos os campos!", 'error');
+    // ✅ ADICIONE AQUI
+    const numeroPda = document.getElementById("opNumeroPda").value.trim();
 
     // 1. Criar registro de operação
     const novaOp = {
-        id: Date.now(),
-        pda: pda,
-        colab: colab,
-        area: area,
-        login: login,
-        inicio: new Date().toLocaleString(),
-        fim: null,
-        qtd: 0,
-        status: 'ativo'
-    };
+    id: Date.now(),
+    pda: pda,
+    numero: numeroPda, // ✅ novo campo
+    colab: colab,
+    area: area,
+    login: login,
+    inicio: new Date().toLocaleString(),
+    fim: null,
+    qtd: 0,
+    status: 'ativo'
+};
     operacoes.push(novaOp);
 
     // 2. Atualizar status do PDA no estoque
@@ -323,6 +394,8 @@ function iniciarOperacao(){
     document.getElementById("opColaborador").value = "";
     document.getElementById("opLogin").value = "";
     document.getElementById("opPdaSelect").value = "";
+    // ✅ ADICIONE AQUI
+    document.getElementById("opNumeroPda").value = "";
     
     toast("PDA Alocado com sucesso!");
     atualizarTudo();
@@ -399,20 +472,57 @@ function renderTabelaAtivos(){
 function renderTabelaEstoque(){
     const tbody = document.querySelector("#tabelaEstoque tbody");
     tbody.innerHTML = "";
-    
+
     estoque.forEach(item => {
+
         const badgeClass = item.status === 'livre' ? 'badge-avail' : 'badge-busy';
         const statusText = item.status === 'livre' ? 'Disponível' : 'Em Uso';
-        const btnDelete = item.status === 'livre' 
-            ? `<button class="btn btn-danger" style="padding:5px; font-size:12px" onclick="removerDoEstoque('${item.id}')"><i class="fa fa-trash"></i></button>` 
+
+        const btnDelete = item.status === 'livre'
+            ? `<button class="btn btn-danger" style="padding:5px; font-size:12px"
+                 onclick="removerDoEstoque('${item.id}')">
+                 <i class="fa fa-trash"></i>
+               </button>`
             : `<span style="color:#ccc"><i class="fa fa-lock"></i></span>`;
 
+        // Criar linha corretamente
         tbody.innerHTML += `
         <tr>
-            <td>${item.id}</td>
-            <td><span class="badge ${badgeClass}">${statusText}</span></td>
-            <td>${btnDelete}</td>
-        </tr>`;
+            <td>
+                ${item.id}
+                <div id="qr-${item.id.replace(/\s+/g,'')}" style="margin-top:6px;"></div>
+            </td>
+
+            <td>
+                <span class="badge ${badgeClass}">${statusText}</span>
+            </td>
+
+            <td class="actions-cell">
+                ${btnDelete}
+            </td>
+        </tr>
+        `;
+
+        // Gerar QRCode depois de inserir no DOM
+        setTimeout(() => {
+            const qrId = "qr-" + item.id.replace(/\s+/g,'');
+            const qrDiv = document.getElementById(qrId);
+
+            if(qrDiv && qrDiv.innerHTML === ""){
+                new QRCode(qrDiv, {
+                    text:
+                        `PDA: ${item.id}\n` +
+                        `Login: ${item.login || ''}\n` +
+                        `Senha1: ${item.senha1 || item.senha || ''}\n` +
+                        `Senha2: ${item.senha2 || ''}\n` +
+                        `Senha3: ${item.senha3 || ''}\n` +
+                        `Senha4: ${item.senha4 || ''}`,
+                    width: 70,
+                    height: 70
+                });
+            }
+        }, 200);
+
     });
 }
 
@@ -484,6 +594,11 @@ function salvarDados(){
     localStorage.setItem("db_estoque", JSON.stringify(estoque));
     localStorage.setItem("db_operacoes", JSON.stringify(operacoes));
 }
+</script>
+
+<!-- Conexão com Firebase -->
+<script type="module">
+  import "./bd.js";
 </script>
 
 </body>
