@@ -83,6 +83,71 @@ tr:hover { background: #f8fafc; }
     display: flex;
     flex-direction: column;
 }
+/* ===== MODAL PDA DETALHES ===== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-card {
+    background: #fff;
+    width: 90%;
+    max-width: 800px;
+    border-radius: 16px;
+    padding: 25px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    animation: fadeIn 0.2s ease-in-out;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.modal-header h3 {
+    margin: 0;
+}
+
+.modal-close {
+    cursor: pointer;
+    font-size: 20px;
+    color: #ef4444;
+}
+
+.qr-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 20px;
+    text-align: center;
+}
+
+.qr-item {
+    background: #f8fafc;
+    padding: 15px;
+    border-radius: 12px;
+}
+
+.qr-item img {
+    width: 120px;
+    height: 120px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+
 </style>
 </head>
 <body>
@@ -233,17 +298,17 @@ tr:hover { background: #f8fafc; }
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td>SP2T2-1001</td><td>2105099801</td><td>123456a.</td><td></td><td></td></tr>
-                            <tr><td>SP2T2-1002</td><td>2105099901</td><td>123456a.</td><td></td><td></td></tr>
-                            <tr><td>SP2T2-1003</td><td>2105100001</td><td>123456a.</td><td></td><td></td></tr>
-                            <tr><td>SP2T2-1004</td><td>2105100101</td><td>123456a.</td><td></td><td></td></tr>
-                            <tr><td>SP2T2-1005</td><td>2105100201</td><td>123456a.</td><td></td><td></td></tr>
-                            <tr><td>CONSOLID.RDC SP2 01</td><td>2104118401</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>CONSOLID.RDC SP2 02</td><td>2104118501</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>CONSOLID.RDC SP2 03</td><td>2104118601</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>CONSOLID.RDC SP2 04</td><td>2104118701</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>CONSOLID.RDC SP2 05</td><td>2104118801</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>CONSOLID.RDC SP2 06</td><td>2104118901</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>SP2T2-1001</td><td>2105099801</td><td>123456a.</td><td>N/A</td><td>N/A</td></tr>
+                            <tr><td>SP2T2-1002</td><td>2105099901</td><td>123456a.</td><td>N/A</td><td>N/A</td></tr>
+                            <tr><td>SP2T2-1003</td><td>2105100001</td><td>123456a.</td><td>N/A</td><td>N/A</td></tr>
+                            <tr><td>SP2T2-1004</td><td>2105100101</td><td>123456a.</td><td>N/A</td><td>N/A</td></tr>
+                            <tr><td>SP2T2-1005</td><td>2105100201</td><td>123456a.</td><td>N/A</td><td>N/A</td></tr>
+                            <tr><td>CONSOLID.RDC SP2 01</td><td>2104118401</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>CONSOLID.RDC SP2 02</td><td>2104118501</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>CONSOLID.RDC SP2 03</td><td>2104118601</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>CONSOLID.RDC SP2 04</td><td>2104118701</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>CONSOLID.RDC SP2 05</td><td>2104118801</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>CONSOLID.RDC SP2 06</td><td>2104118901</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -261,15 +326,15 @@ tr:hover { background: #f8fafc; }
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td>EXPEDIÇÂO RDC-SP2 01</td><td>2104124901</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>EXPEDIÇÂO RDC-SP2 02</td><td>2104125001</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>EXPEDIÇÂO RDC-SP2 03</td><td>2104125101</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>EXPEDIÇÂO RDC-SP2 04</td><td>2104125201</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>SECUNDARIA EXPED.02</td><td>2104119101</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>SECUNDARIA EXPED.03</td><td>2104119201</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>SECUNDARIA EXPED.04</td><td>2104119301</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>SECUNDARIA EXPED.05</td><td>2104119401</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>SECUNDARIA EXPED.06</td><td>2104119501</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>EXPEDIÇÂO RDC-SP2 01</td><td>2104124901</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>EXPEDIÇÂO RDC-SP2 02</td><td>2104125001</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>EXPEDIÇÂO RDC-SP2 03</td><td>2104125101</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>EXPEDIÇÂO RDC-SP2 04</td><td>2104125201</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.02</td><td>2104119101</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.03</td><td>2104119201</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.04</td><td>2104119301</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.05</td><td>2104119401</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.06</td><td>2104119501</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -287,10 +352,10 @@ tr:hover { background: #f8fafc; }
                             </tr>
                         </thead>
                         <tbody>
-                            <tr><td>SECUNDARIA EXPED.07</td><td>2104118301</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>SECUNDARIA EXPED.08</td><td>2104118201</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>SECUNDARIA EXPED.09</td><td>2104118101</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
-                            <tr><td>SECUNDARIA EXPED.10</td><td>2104118001</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.07</td><td>2104118301</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.08</td><td>2104118201</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.09</td><td>2104118101</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.10</td><td>2104118001</td><td>123456a.</td><td>rscsp2a.</td><td>654321a.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -637,17 +702,155 @@ function exportarExcel(){
     document.body.appendChild(link);
     link.click();
 }
+function iniciarOperacaoViaModal(nomePDA, login){
+
+    abrirAba('operacional');
+
+    document.getElementById("opLogin").value = login;
+
+    atualizarSelectPDAs();
+
+    const select = document.getElementById("opPdaSelect");
+
+    const pdaDisponivel = estoque.find(e => 
+        e.id === nomePDA && e.status === 'livre'
+    );
+
+    if(pdaDisponivel){
+        select.value = nomePDA;
+        toast("PDA selecionado automaticamente!");
+    } else {
+        toast("Este PDA não está disponível no estoque.", "error");
+    }
+
+    fecharModalPDA();
+
+    setTimeout(() => {
+        document.querySelector("#operacional .card").scrollIntoView({
+            behavior: "smooth"
+        });
+    }, 300);
+}
 
 function salvarDados(){
     localStorage.setItem("db_estoque", JSON.stringify(estoque));
     localStorage.setItem("db_operacoes", JSON.stringify(operacoes));
 }
+
+function salvarDados(){
+    localStorage.setItem("db_estoque", JSON.stringify(estoque));
+    localStorage.setItem("db_operacoes", JSON.stringify(operacoes));
+}
+// ====== MODAL DETALHES PDA ======
+
+function abrirModalPDA(nome, login, s1, s2, s3) {
+
+    document.getElementById("modalTitulo").innerText = nome;
+
+    function gerarQR(valor){
+        if(!valor || valor === "N/A") return "";
+        return `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(valor)}`;
+    }
+
+    let conteudo = `
+        <div class="qr-grid">
+            <div class="qr-item">
+                <strong>Login</strong>
+                <p>${login}</p>
+                <img src="${gerarQR(login)}">
+            </div>
+
+            <div class="qr-item">
+                <strong>Senha 1</strong>
+                <p>${s1}</p>
+                <img src="${gerarQR(s1)}">
+            </div>
+    `;
+
+    if(s2 && s2 !== "N/A"){
+        conteudo += `
+            <div class="qr-item">
+                <strong>Senha 2</strong>
+                <p>${s2}</p>
+                <img src="${gerarQR(s2)}">
+            </div>
+        `;
+    }
+
+    if(s3 && s3 !== "N/A"){
+        conteudo += `
+            <div class="qr-item">
+                <strong>Senha 3</strong>
+                <p>${s3}</p>
+                <img src="${gerarQR(s3)}">
+            </div>
+        `;
+    }
+
+    conteudo += `</div>`;
+
+    document.getElementById("modalConteudo").innerHTML = conteudo;
+
+    // BOTÃO INICIAR OPERAÇÃO
+    const btn = document.getElementById("btnIniciarOperacaoModal");
+    btn.onclick = function(){
+        iniciarOperacaoViaModal(nome, login);
+    };
+
+    document.getElementById("modalPDA").classList.remove("hidden");
+}
+
+function fecharModalPDA(){
+    document.getElementById("modalPDA").classList.add("hidden");
+}
+
+// Clique nas linhas das tabelas de senhas
+document.addEventListener("DOMContentLoaded", () => {
+
+    document.querySelectorAll(".tabela-senhas tbody tr").forEach(row => {
+
+        row.style.cursor = "pointer";
+
+        row.addEventListener("click", () => {
+
+            const cols = row.querySelectorAll("td");
+
+            const nome = cols[0].innerText;
+            const login = cols[1].innerText;
+            const s1 = cols[2].innerText;
+            const s2 = cols[3].innerText;
+            const s3 = cols[4].innerText;
+
+            abrirModalPDA(nome, login, s1, s2, s3);
+        });
+
+    });
+
+});
+
 </script>
 
 <!-- Conexão com Firebase (se ainda for usar) -->
 <script type="module">
   // import "./bd.js";   ← comente ou remova se não estiver usando firebase
 </script>
+<!-- MODAL DETALHES PDA -->
+<div id="modalPDA" class="modal-overlay hidden">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h3 id="modalTitulo"></h3>
+            <i class="fa-solid fa-xmark modal-close" onclick="fecharModalPDA()"></i>
+        </div>
+
+        <div id="modalConteudo"></div>
+
+        <div style="margin-top:20px; text-align:right;">
+            <button class="btn btn-primary" id="btnIniciarOperacaoModal">
+                <i class="fa-solid fa-circle-play"></i> Iniciar Operação
+            </button>
+        </div>
+    </div>
+</div>
 
 </body>
 </html>
