@@ -8,9 +8,6 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <!-- Gráficos -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs/qrcode.min.js"></script>
-
-
 
 <style>
 :root { --primary: #2563eb; --success: #10b981; --warning: #f59e0b; --danger: #ef4444; --bg: #f3f4f6; --card: #ffffff; }
@@ -42,11 +39,7 @@ h1 { color: #1e293b; margin-bottom: 5px; }
 
 .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
 input, select, button { padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; width: 100%; box-sizing: border-box; font-size: 14px; transition: 0.2s; }
-input:focus, select:focus {
-  border-color: var(--primary);
-  outline: none;
-  box-shadow: 0 0 0 2px var(--primary);
-}
+input:focus, select:focus { border-color: var(--primary); outline: none; ring: 2px solid var(--primary); }
 
 .btn { cursor: pointer; border: none; font-weight: bold; color: #fff; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-primary { background: var(--primary); }
@@ -74,6 +67,22 @@ tr:hover { background: #f8fafc; }
 .toast.show { opacity: 1; transform: translateY(0); }
 .chart-container { position: relative; height: 250px; width: 100%; }
 .actions-cell { display: flex; gap: 5px; }
+
+/* Ajustes para tabelas de senhas */
+.tabela-senhas th, .tabela-senhas td { font-size: 0.9rem; white-space: nowrap; }
+.tabela-senhas thead th { background: #e0f2fe; color: #1e40af; }
+
+/* Pequeno ajuste para melhorar alinhamento dos cards na aba estoque */
+.form-grid.dois-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    align-items: stretch;
+}
+.form-grid.dois-cards > .card {
+    display: flex;
+    flex-direction: column;
+}
 </style>
 </head>
 <body>
@@ -127,9 +136,9 @@ tr:hover { background: #f8fafc; }
                     <option>Consolidação</option>
                     <option>Expedição</option>
                 </select>
-                <input id="opNumeroPda" placeholder="Número do PDA (ex: 1001)">
                 <input id="opColaborador" placeholder="Nome do Colaborador">
                 <input id="opLogin" placeholder="Login / Matrícula">
+                <input id="opNumeroPda" placeholder="Número do PDA (opcional)">
                 <!-- Select inteligente preenchido via JS -->
                 <select id="opPdaSelect">
                     <option value="">Carregando PDAs...</option>
@@ -141,6 +150,17 @@ tr:hover { background: #f8fafc; }
         <!-- Tabela de PDAs em Uso -->
         <div class="card">
             <h2><i class="fa-solid fa-person-digging"></i> PDAs em Uso (Ativos)</h2>
+            
+            <!-- CAMPO DE PESQUISA -->
+            <div style="margin: 15px 0; max-width: 400px;">
+                <input 
+                    id="filtroAtivos" 
+                    placeholder="Filtrar por colaborador ou nº PDA..." 
+                    style="width:100%;"
+                    oninput="filtrarTabelaAtivos()"
+                >
+            </div>
+
             <div class="table-responsive">
                 <table id="tabelaAtivos">
                     <thead>
@@ -160,7 +180,8 @@ tr:hover { background: #f8fafc; }
 
     <!-- ABA ESTOQUE -->
     <div id="estoque" class="aba hidden">
-        <div class="form-grid" style="grid-template-columns: 1fr 1fr;">
+        <div class="form-grid dois-cards">
+            <!-- Card 1: Cadastro -->
             <div class="card">
                 <h2><i class="fa-solid fa-plus-circle"></i> Cadastrar Novo PDA</h2>
                 <div class="form-grid">
@@ -174,12 +195,113 @@ tr:hover { background: #f8fafc; }
                     </table>
                 </div>
             </div>
-            
+
+            <!-- Card 2: Listas por Área (novo card separado) -->
             <div class="card">
-                <h2><i class="fa-solid fa-chart-pie"></i> Status da Frota</h2>
-                <div class="chart-container">
-                    <canvas id="graficoStatus"></canvas>
+                <h2><i class="fa-solid fa-list-check"></i> PDAs Cadastrados por Área</h2>
+
+                <h4>Chegada</h4>
+                <div class="table-responsive">
+                    <table class="tabela-senhas">
+                        <thead>
+                            <tr>
+                                <th>Nome do PDA</th>
+                                <th>Login</th>
+                                <th>Senha 1</th>
+                                <th>Senha 2</th>
+                                <th>Senha 3</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>EVO-Test1</td><td>2105099801</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>EVO-Test2</td><td>2104118501</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>EVO-Test3</td><td>2104118501</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                        </tbody>
+                    </table>
                 </div>
+
+                <h4>Consolidação</h4>
+                <div class="table-responsive">
+                    <table class="tabela-senhas">
+                        <thead>
+                            <tr>
+                                <th>Nome do PDA</th>
+                                <th>Login</th>
+                                <th>Senha 1</th>
+                                <th>Senha 2</th>
+                                <th>Senha 3</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>SP2T2-1001</td><td>2105099801</td><td>123456a.</td><td></td><td></td></tr>
+                            <tr><td>SP2T2-1002</td><td>2105099901</td><td>123456a.</td><td></td><td></td></tr>
+                            <tr><td>SP2T2-1003</td><td>2105100001</td><td>123456a.</td><td></td><td></td></tr>
+                            <tr><td>SP2T2-1004</td><td>2105100101</td><td>123456a.</td><td></td><td></td></tr>
+                            <tr><td>SP2T2-1005</td><td>2105100201</td><td>123456a.</td><td></td><td></td></tr>
+                            <tr><td>CONSOLID.RDC SP2 01</td><td>2104118401</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>CONSOLID.RDC SP2 02</td><td>2104118501</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>CONSOLID.RDC SP2 03</td><td>2104118601</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>CONSOLID.RDC SP2 04</td><td>2104118701</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>CONSOLID.RDC SP2 05</td><td>2104118801</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>CONSOLID.RDC SP2 06</td><td>2104118901</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4>Expedição</h4>
+                <div class="table-responsive">
+                    <table class="tabela-senhas">
+                        <thead>
+                            <tr>
+                                <th>Nome do PDA</th>
+                                <th>Login</th>
+                                <th>Senha 1</th>
+                                <th>Senha 2</th>
+                                <th>Senha 3</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>EXPEDIÇÂO RDC-SP2 01</td><td>2104124901</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>EXPEDIÇÂO RDC-SP2 02</td><td>2104125001</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>EXPEDIÇÂO RDC-SP2 03</td><td>2104125101</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>EXPEDIÇÂO RDC-SP2 04</td><td>2104125201</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.02</td><td>2104119101</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.03</td><td>2104119201</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.04</td><td>2104119301</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.05</td><td>2104119401</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.06</td><td>2104119501</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <h4>Dona Nubia</h4>
+                <div class="table-responsive">
+                    <table class="tabela-senhas">
+                        <thead>
+                            <tr>
+                                <th>Nome do PDA</th>
+                                <th>Login</th>
+                                <th>Senha 1</th>
+                                <th>Senha 2</th>
+                                <th>Senha 3</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>SECUNDARIA EXPED.07</td><td>2104118301</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.08</td><td>2104118201</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.09</td><td>2104118101</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                            <tr><td>SECUNDARIA EXPED.10</td><td>2104118001</td><td>123456a.</td><td>rscsp2a.</td><td>123456a.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gráfico mantido abaixo dos dois cards -->
+        <div class="card" style="margin-top: 25px;">
+            <h2><i class="fa-solid fa-chart-pie"></i> Status da Frota</h2>
+            <div class="chart-container">
+                <canvas id="graficoStatus"></canvas>
             </div>
         </div>
     </div>
@@ -187,9 +309,13 @@ tr:hover { background: #f8fafc; }
     <!-- ABA HISTÓRICO -->
     <div id="historico" class="aba hidden">
         <div class="card">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
                 <h2><i class="fa-solid fa-list"></i> Histórico Completo</h2>
-                <button class="btn btn-success" onclick="exportarExcel()"><i class="fa-solid fa-file-excel"></i> Exportar CSV</button>
+                <div>
+                    <button class="btn btn-primary" onclick="gerarRelatorio()"><i class="fa-solid fa-file-lines"></i> Gerar Relatório</button>
+                    <button class="btn btn-danger" onclick="limparHistorico()"><i class="fa-solid fa-trash-can"></i> Limpar Histórico</button>
+                    <button class="btn btn-success" onclick="exportarExcel()"><i class="fa-solid fa-file-excel"></i> Exportar CSV</button>
+                </div>
             </div>
             <div class="table-responsive">
                 <table id="tabelaHistorico">
@@ -211,73 +337,13 @@ tr:hover { background: #f8fafc; }
 
 </div>
 
-<!-- Modal para Devolução -->
+<!-- Modal para Devolução / Toast -->
 <div id="toast" class="toast"></div>
 
 <script>
 // --- BANCO DE DADOS (LOCALSTORAGE) ---
 let estoque = JSON.parse(localStorage.getItem("db_estoque")) || []; 
-// Estrutura estoque: { id: "PDA-01", status: "livre" | "uso" }
-// --- PDAs AUTOMÁTICOS JÁ CADASTRADOS ---
-const pdasIniciais = [
-
-  // CHEGADA
-  { id: "SP2T2-TEST 1", login: "2105099801", senha1: "123456a." },
-  { id: "SP2T2-TEST 2", login: "2105099901", senha1: "123456a." },
-  { id: "SP2T2-TEST 3", login: "2105100001", senha1: "123456a." },
-  { id: "SP2T2-TEST 4", login: "2105100101", senha1: "123456a." },
-  { id: "SP2T2-TEST 5", login: "2105100201", senha1: "123456a." },
-
-  // CONSOLIDAÇÃO
-  { id: "SP2T2-1001", login: "2105099801", senha: "123456a." },
-  { id: "SP2T2-1002", login: "2105099901", senha: "123456a." },
-  { id: "SP2T2-1003", login: "2105100001", senha: "123456a." },
-  { id: "SP2T2-1004", login: "2105100101", senha: "123456a." },
-  { id: "SP2T2-1005", login: "2105100201", senha: "123456a." },
-
-  { id: "CONSOLID.RDC SP2 01", login: "2104118401", senha1: "123456a." },
-  { id: "CONSOLID.RDC SP2 02", login: "2104118501", senha1: "123456a." },
-  { id: "CONSOLID.RDC SP2 03", login: "2104118601", senha1: "123456a." },
-  { id: "CONSOLID.RDC SP2 04", login: "2104118701", senha1: "123456a." },
-  { id: "CONSOLID.RDC SP2 05", login: "2104118801", senha1: "123456a." },
-  { id: "CONSOLID.RDC SP2 06", login: "2104118901", senha1: "123456a." },
-
-  // EXPEDIÇÃO
-  { id: "EXPEDIÇÂO RDC-SP2 01", login: "2104124901", senha1: "123456a." },
-  { id: "EXPEDIÇÂO RDC-SP2 02", login: "2104125001", senha1: "123456a." },
-  { id: "EXPEDIÇÂO RDC-SP2 03", login: "2104125101", senha1: "123456a." },
-  { id: "EXPEDIÇÂO RDC-SP2 04", login: "2104125201", senha1: "123456a." },
-
-  { id: "SECUNDARIA EXPED.02", login: "2104119101", senha1: "123456a." },
-  { id: "SECUNDARIA EXPED.03", login: "2104119201", senha1: "123456a." },
-  { id: "SECUNDARIA EXPED.04", login: "2104119301", senha1: "123456a." },
-  { id: "SECUNDARIA EXPED.05", login: "2104119401", senha1: "123456a." },
-  { id: "SECUNDARIA EXPED.06", login: "2104119501", senha1: "123456a." },
-
-  // DONA NUBIA
-  { id: "SECUNDARIA EXPED.07", login: "2104118301", senha1: "123456a." },
-  { id: "SECUNDARIA EXPED.08", login: "2104118201", senha1: "123456a." },
-  { id: "SECUNDARIA EXPED.09", login: "2104118101", senha1: "123456a." },
-  { id: "SECUNDARIA EXPED.10", login: "2104118001", senha1: "123456a." }
-];
-
-// --- INSERIR AUTOMATICAMENTE NO ESTOQUE SEM DUPLICAR ---
-pdasIniciais.forEach(pda => {
-  if (!estoque.find(e => e.id === pda.id)) {
-    estoque.push({
-      id: pda.id,
-      status: "livre",
-      login: pda.login,
-      senha1: pda.senha1,
-      senha2: "",
-      senha3: "",
-      senha4: ""
-    });
-  }
-});
-
 let operacoes = JSON.parse(localStorage.getItem("db_operacoes")) || [];
-// Estrutura op: { id: timestamp, pda: "", colab: "", area: "", login: "", inicio: "", fim: "", qtd: 0, status: "ativo" | "concluido" }
 
 // --- INICIALIZAÇÃO ---
 let chartInstance = null;
@@ -291,7 +357,6 @@ function abrirAba(id){
     document.querySelectorAll(".aba").forEach(a => a.classList.add("hidden"));
     document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
     document.getElementById(id).classList.remove("hidden");
-    // Encontrar o botão que chamou a função (aproximação)
     const buttons = document.querySelectorAll(".tab");
     if(id === 'operacional') buttons[0].classList.add("active");
     if(id === 'estoque') buttons[1].classList.add("active");
@@ -308,7 +373,20 @@ function toast(msg, type='info'){
     setTimeout(() => t.classList.remove("show"), 3000);
 }
 
-// --- LÓGICA DE ESTOQUE ---
+// --- FUNÇÕES AUXILIARES ---
+function gerarRelatorio(){
+    alert("Funcionalidade de relatório em desenvolvimento.\n\nFuturamente poderá gerar PDF com filtros por data/área/colaborador.");
+}
+
+function limparHistorico(){
+    if(!confirm("Tem certeza que deseja LIMPAR TODO o histórico de operações?\nEssa ação não pode ser desfeita.")) return;
+    
+    operacoes = operacoes.filter(op => op.status === 'ativo');
+    salvarDados();
+    toast("Histórico de operações concluídas foi limpo!", 'info');
+    atualizarTudo();
+}
+
 function adicionarAoEstoque(){
     const nome = document.getElementById("novoPdaNome").value.trim().toUpperCase();
     if(!nome) return toast("Digite o nome do PDA", 'error');
@@ -325,7 +403,6 @@ function adicionarAoEstoque(){
 function removerDoEstoque(id){
     if(!confirm(`Tem certeza que deseja remover o ${id}?`)) return;
     
-    // Verifica se está em uso
     const emUso = estoque.find(e => e.id === id && e.status === 'uso');
     if(emUso) return toast("Não pode remover um PDA em uso!", 'error');
 
@@ -335,13 +412,11 @@ function removerDoEstoque(id){
     atualizarTudo();
 }
 
-// --- LÓGICA OPERACIONAL (Check-in/Check-out) ---
 function atualizarSelectPDAs(){
     const select = document.getElementById("opPdaSelect");
     select.innerHTML = '<option value="" disabled selected>Selecione um PDA Disponível</option>';
-
+    
     const disponiveis = estoque.filter(e => e.status === 'livre');
-
     if(disponiveis.length === 0){
         const opt = document.createElement("option");
         opt.text = "Sem PDAs disponíveis";
@@ -352,10 +427,7 @@ function atualizarSelectPDAs(){
     disponiveis.forEach(pda => {
         const opt = document.createElement("option");
         opt.value = pda.id;
-
-        // ✅ Agora mostra também o número/login do PDA
-        opt.text = `✅ ${pda.id} — Login: ${pda.login || ''}`;
-
+        opt.text = `✅ ${pda.id}`;
         select.add(opt);
     });
 }
@@ -364,38 +436,34 @@ function iniciarOperacao(){
     const area = document.getElementById("opArea").value;
     const colab = document.getElementById("opColaborador").value.trim();
     const login = document.getElementById("opLogin").value.trim();
+    const numeroPda = document.getElementById("opNumeroPda").value.trim();
     const pda = document.getElementById("opPdaSelect").value;
 
-    // ✅ ADICIONE AQUI
-    const numeroPda = document.getElementById("opNumeroPda").value.trim();
+    if(!area || !colab || !login || !pda) return toast("Preencha todos os campos obrigatórios!", 'error');
 
-    // 1. Criar registro de operação
     const novaOp = {
-    id: Date.now(),
-    pda: pda,
-    numero: numeroPda, // ✅ novo campo
-    colab: colab,
-    area: area,
-    login: login,
-    inicio: new Date().toLocaleString(),
-    fim: null,
-    qtd: 0,
-    status: 'ativo'
-};
+        id: Date.now(),
+        pda: pda,
+        colab: colab,
+        area: area,
+        login: login,
+        numeroPdaInformado: numeroPda || "-", 
+        inicio: new Date().toLocaleString(),
+        fim: null,
+        qtd: 0,
+        status: 'ativo'
+    };
     operacoes.push(novaOp);
 
-    // 2. Atualizar status do PDA no estoque
     const idx = estoque.findIndex(e => e.id === pda);
     if(idx > -1) estoque[idx].status = 'uso';
 
     salvarDados();
     
-    // Limpar campos
     document.getElementById("opColaborador").value = "";
     document.getElementById("opLogin").value = "";
-    document.getElementById("opPdaSelect").value = "";
-    // ✅ ADICIONE AQUI
     document.getElementById("opNumeroPda").value = "";
+    document.getElementById("opPdaSelect").value = "";
     
     toast("PDA Alocado com sucesso!");
     atualizarTudo();
@@ -403,11 +471,10 @@ function iniciarOperacao(){
 
 function devolverPDA(idOp){
     const qtdStr = prompt("Informe a Quantidade Produzida (ou deixe 0):");
-    if(qtdStr === null) return; // Cancelou
+    if(qtdStr === null) return;
     
     const qtd = parseInt(qtdStr) || 0;
 
-    // 1. Encontrar operação e fechar
     const opIndex = operacoes.findIndex(o => o.id === idOp);
     if(opIndex === -1) return;
 
@@ -415,7 +482,6 @@ function devolverPDA(idOp){
     operacoes[opIndex].fim = new Date().toLocaleString();
     operacoes[opIndex].qtd = qtd;
 
-    // 2. Liberar PDA no estoque
     const pdaId = operacoes[opIndex].pda;
     const estIndex = estoque.findIndex(e => e.id === pdaId);
     if(estIndex > -1) estoque[estIndex].status = 'livre';
@@ -427,10 +493,10 @@ function devolverPDA(idOp){
 
 // --- RENDERIZAÇÃO ---
 function atualizarTudo(){
-    salvarDados(); // Garante sync
+    salvarDados();
     atualizarDashboard();
     atualizarSelectPDAs();
-    renderTabelaAtivos();
+    renderTabelaAtivos(document.getElementById("filtroAtivos")?.value || "");
     renderTabelaEstoque();
     renderTabelaHistorico();
 }
@@ -442,21 +508,36 @@ function atualizarDashboard(){
     document.getElementById("dashDisp").innerText = estoque.length - emUso;
 }
 
-function renderTabelaAtivos(){
+function renderTabelaAtivos(filtro = "") {
     const tbody = document.querySelector("#tabelaAtivos tbody");
     tbody.innerHTML = "";
     
     const ativos = operacoes.filter(o => o.status === 'ativo');
 
-    if(ativos.length === 0){
-        tbody.innerHTML = "<tr><td colspan='5' style='text-align:center'>Nenhuma operação ativa.</td></tr>";
+    let filtrados = ativos;
+    if (filtro.trim()) {
+        const termo = filtro.toLowerCase().trim();
+        filtrados = ativos.filter(op => 
+            op.colab.toLowerCase().includes(termo) ||
+            (op.numeroPdaInformado && op.numeroPdaInformado !== "-" && 
+             op.numeroPdaInformado.toLowerCase().includes(termo))
+        );
+    }
+
+    if (filtrados.length === 0) {
+        const msg = filtro.trim() ? "Nenhum PDA encontrado com este termo." : "Nenhuma operação ativa.";
+        tbody.innerHTML = `<tr><td colspan='5' style='text-align:center'>${msg}</td></tr>`;
         return;
     }
 
-    ativos.forEach(op => {
+    filtrados.forEach(op => {
+        const pdaExibido = (op.numeroPdaInformado && op.numeroPdaInformado !== "-") 
+            ? op.numeroPdaInformado 
+            : op.pda;
+
         tbody.innerHTML += `
         <tr>
-            <td><strong>${op.pda}</strong></td>
+            <td><strong>${pdaExibido}</strong></td>
             <td>${op.colab} <br><small style="color:#666">${op.login}</small></td>
             <td>${op.area}</td>
             <td>${op.inicio}</td>
@@ -469,60 +550,28 @@ function renderTabelaAtivos(){
     });
 }
 
+function filtrarTabelaAtivos() {
+    const termo = document.getElementById("filtroAtivos").value;
+    renderTabelaAtivos(termo);
+}
+
 function renderTabelaEstoque(){
     const tbody = document.querySelector("#tabelaEstoque tbody");
     tbody.innerHTML = "";
-
+    
     estoque.forEach(item => {
-
         const badgeClass = item.status === 'livre' ? 'badge-avail' : 'badge-busy';
         const statusText = item.status === 'livre' ? 'Disponível' : 'Em Uso';
-
-        const btnDelete = item.status === 'livre'
-            ? `<button class="btn btn-danger" style="padding:5px; font-size:12px"
-                 onclick="removerDoEstoque('${item.id}')">
-                 <i class="fa fa-trash"></i>
-               </button>`
+        const btnDelete = item.status === 'livre' 
+            ? `<button class="btn btn-danger" style="padding:5px; font-size:12px" onclick="removerDoEstoque('${item.id}')"><i class="fa fa-trash"></i></button>` 
             : `<span style="color:#ccc"><i class="fa fa-lock"></i></span>`;
 
-        // Criar linha corretamente
         tbody.innerHTML += `
         <tr>
-            <td>
-                ${item.id}
-                <div id="qr-${item.id.replace(/\s+/g,'')}" style="margin-top:6px;"></div>
-            </td>
-
-            <td>
-                <span class="badge ${badgeClass}">${statusText}</span>
-            </td>
-
-            <td class="actions-cell">
-                ${btnDelete}
-            </td>
-        </tr>
-        `;
-
-        // Gerar QRCode depois de inserir no DOM
-        setTimeout(() => {
-            const qrId = "qr-" + item.id.replace(/\s+/g,'');
-            const qrDiv = document.getElementById(qrId);
-
-            if(qrDiv && qrDiv.innerHTML === ""){
-                new QRCode(qrDiv, {
-                    text:
-                        `PDA: ${item.id}\n` +
-                        `Login: ${item.login || ''}\n` +
-                        `Senha1: ${item.senha1 || item.senha || ''}\n` +
-                        `Senha2: ${item.senha2 || ''}\n` +
-                        `Senha3: ${item.senha3 || ''}\n` +
-                        `Senha4: ${item.senha4 || ''}`,
-                    width: 70,
-                    height: 70
-                });
-            }
-        }, 200);
-
+            <td>${item.id}</td>
+            <td><span class="badge ${badgeClass}">${statusText}</span></td>
+            <td>${btnDelete}</td>
+        </tr>`;
     });
 }
 
@@ -530,7 +579,6 @@ function renderTabelaHistorico(){
     const tbody = document.querySelector("#tabelaHistorico tbody");
     tbody.innerHTML = "";
     
-    // Mostrar as últimas 50 operações, invertidas (mais recentes primeiro)
     const historico = operacoes.filter(o => o.status === 'concluido').reverse().slice(0, 50);
 
     historico.forEach(op => {
@@ -596,12 +644,10 @@ function salvarDados(){
 }
 </script>
 
-<!-- Conexão com Firebase -->
+<!-- Conexão com Firebase (se ainda for usar) -->
 <script type="module">
-  import "./bd.js";
+  // import "./bd.js";   ← comente ou remova se não estiver usando firebase
 </script>
 
 </body>
 </html>
-
-
