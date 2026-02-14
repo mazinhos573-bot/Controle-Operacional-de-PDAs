@@ -154,7 +154,7 @@ tr:hover { background: #f8fafc; }
 
 <div class="container">
     <header>
-        <h1><i class="fa-solid fa-boxes-stacked"></i> Controle Operacional de PDAs</h1>
+        <h1><i class="fa-solid fa-boxes-stacked"></i> Controle Operacional de LOGINS/PDAs</h1>
         <p class="subtitle">Gerenciamento de Estoque e Produtividade</p>
     </header>
 
@@ -162,7 +162,7 @@ tr:hover { background: #f8fafc; }
     <div class="dashboard">
         <div class="metric-card">
             <div class="metric-info">
-                <h3>Total PDAs</h3>
+                <h3>Total Logins</h3>
                 <p id="dashTotal">0</p>
             </div>
             <i class="fa-solid fa-mobile-screen metric-icon"></i>
@@ -206,15 +206,15 @@ tr:hover { background: #f8fafc; }
                 <input id="opNumeroPda" placeholder="Número do PDA (opcional)">
                 <!-- Select inteligente preenchido via JS -->
                 <select id="opPdaSelect">
-                    <option value="">Carregando PDAs...</option>
+                    <option value="">Carregando logins...</option>
                 </select>
-                <button class="btn btn-primary" onclick="iniciarOperacao()"><i class="fa-solid fa-plus"></i> Alocar PDA</button>
+                <button class="btn btn-primary" onclick="iniciarOperacao()"><i class="fa-solid fa-plus"></i> Alocar login/PDA</button>
             </div>
         </div>
 
         <!-- Tabela de PDAs em Uso -->
         <div class="card">
-            <h2><i class="fa-solid fa-person-digging"></i> PDAs em Uso (Ativos)</h2>
+            <h2><i class="fa-solid fa-person-digging"></i> login/PDAs em Uso (Ativos)</h2>
             
             <!-- CAMPO DE PESQUISA -->
             <div style="margin: 15px 0; max-width: 400px;">
@@ -263,14 +263,14 @@ tr:hover { background: #f8fafc; }
 
             <!-- Card 2: Listas por Área (novo card separado) -->
             <div class="card">
-                <h2><i class="fa-solid fa-list-check"></i> PDAs Cadastrados por Área</h2>
+                <h2><i class="fa-solid fa-list-check"></i> Logins Cadastrados por Área</h2>
 
                 <h4>Chegada</h4>
                 <div class="table-responsive">
                     <table class="tabela-senhas">
                         <thead>
                             <tr>
-                                <th>Nome do PDA</th>
+                                <th>Nome do Login</th>
                                 <th>Login</th>
                                 <th>Senha 1</th>
                                 <th>Senha 2</th>
@@ -290,7 +290,7 @@ tr:hover { background: #f8fafc; }
                     <table class="tabela-senhas">
                         <thead>
                             <tr>
-                                <th>Nome do PDA</th>
+                                <th>Nome do Login</th>
                                 <th>Login</th>
                                 <th>Senha 1</th>
                                 <th>Senha 2</th>
@@ -318,7 +318,7 @@ tr:hover { background: #f8fafc; }
                     <table class="tabela-senhas">
                         <thead>
                             <tr>
-                                <th>Nome do PDA</th>
+                                <th>Nome do Login</th>
                                 <th>Login</th>
                                 <th>Senha 1</th>
                                 <th>Senha 2</th>
@@ -344,7 +344,7 @@ tr:hover { background: #f8fafc; }
                     <table class="tabela-senhas">
                         <thead>
                             <tr>
-                                <th>Nome do PDA</th>
+                                <th>Nome do Login</th>
                                 <th>Login</th>
                                 <th>Senha 1</th>
                                 <th>Senha 2</th>
@@ -854,3 +854,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
