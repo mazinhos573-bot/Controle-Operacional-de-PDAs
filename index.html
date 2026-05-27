@@ -72,6 +72,10 @@ tr:hover { background: #f8fafc; }
 .tabela-senhas th, .tabela-senhas td { font-size: 0.9rem; white-space: nowrap; }
 .tabela-senhas thead th { background: #e0f2fe; color: #1e40af; }
 
+/* Linhas com status dinâmico */
+.row-status-livre { border-left: 5px solid var(--success) !important; background-color: rgba(16, 185, 129, 0.05); }
+.row-status-uso { border-left: 5px solid var(--danger) !important; background-color: rgba(239, 68, 68, 0.05); }
+
 /* Pequeno ajuste para melhorar alinhamento dos cards na aba estoque */
 .form-grid.dois-cards {
     display: grid;
@@ -264,6 +268,10 @@ tr:hover { background: #f8fafc; }
             <!-- Card 2: Listas por Área (novo card separado) -->
             <div class="card">
                 <h2><i class="fa-solid fa-list-check"></i> Logins Cadastrados por Área</h2>
+                <p style="font-size: 0.8rem; color: #64748b; margin-top: -10px;">
+                    <i class="fa-solid fa-circle" style="color: var(--success)"></i> Disponível | 
+                    <i class="fa-solid fa-circle" style="color: var(--danger)"></i> Em Uso
+                </p>
 
                 <h4>Chegada</h4>
                 <div class="table-responsive">
@@ -376,7 +384,8 @@ tr:hover { background: #f8fafc; }
         <div class="card">
             <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
                 <h2><i class="fa-solid fa-list"></i> Histórico Completo</h2>
-                <div>
+                <div style="display:flex; gap:10px;">
+                    <input id="filtroHistorico" placeholder="Buscar no histórico..." style="width:200px;" oninput="renderTabelaHistorico()">
                     <button class="btn btn-primary" onclick="gerarRelatorio()"><i class="fa-solid fa-file-lines"></i> Gerar Relatório</button>
                     <button class="btn btn-danger" onclick="limparHistorico()"><i class="fa-solid fa-trash-can"></i> Limpar Histórico</button>
                     <button class="btn btn-success" onclick="exportarExcel()"><i class="fa-solid fa-file-excel"></i> Exportar CSV</button>
@@ -427,7 +436,10 @@ function abrirAba(id){
     if(id === 'estoque') buttons[1].classList.add("active");
     if(id === 'historico') buttons[2].classList.add("active");
     
-    if(id === 'estoque') renderChart();
+    if(id === 'estoque') {
+        renderChart();
+        atualizarStatusTabelasArea();
+    }
 }
 
 function toast(msg, type='info'){
@@ -564,6 +576,7 @@ function atualizarTudo(){
     renderTabelaAtivos(document.getElementById("filtroAtivos")?.value || "");
     renderTabelaEstoque();
     renderTabelaHistorico();
+    atualizarStatusTabelasArea();
 }
 
 function atualizarDashboard(){
@@ -644,9 +657,19 @@ function renderTabelaHistorico(){
     const tbody = document.querySelector("#tabelaHistorico tbody");
     tbody.innerHTML = "";
     
-    const historico = operacoes.filter(o => o.status === 'concluido').reverse().slice(0, 50);
+    const termo = document.getElementById("filtroHistorico")?.value.toLowerCase() || "";
+    
+    let historico = operacoes.filter(o => o.status === 'concluido');
 
-    historico.forEach(op => {
+    if(termo){
+        historico = historico.filter(op => 
+            op.colab.toLowerCase().includes(termo) || 
+            op.area.toLowerCase().includes(termo) || 
+            op.pda.toLowerCase().includes(termo)
+        );
+    }
+
+    historico.reverse().slice(0, 50).forEach(op => {
         tbody.innerHTML += `
         <tr>
             <td><small>${op.fim}</small></td>
@@ -702,6 +725,7 @@ function exportarExcel(){
     document.body.appendChild(link);
     link.click();
 }
+
 function iniciarOperacaoViaModal(nomePDA, login){
 
     abrirAba('operacional');
@@ -737,10 +761,6 @@ function salvarDados(){
     localStorage.setItem("db_operacoes", JSON.stringify(operacoes));
 }
 
-function salvarDados(){
-    localStorage.setItem("db_estoque", JSON.stringify(estoque));
-    localStorage.setItem("db_operacoes", JSON.stringify(operacoes));
-}
 // ====== MODAL DETALHES PDA ======
 
 function abrirModalPDA(nome, login, s1, s2, s3) {
@@ -804,6 +824,26 @@ function fecharModalPDA(){
     document.getElementById("modalPDA").classList.add("hidden");
 }
 
+// NOVA FUNÇÃO: Sincronizar cores das tabelas de área com o estoque
+function atualizarStatusTabelasArea() {
+    const rows = document.querySelectorAll(".tabela-senhas tbody tr");
+    rows.forEach(row => {
+        const nomeLogin = row.cells[0].innerText.trim();
+        const itemEstoque = estoque.find(e => e.id === nomeLogin);
+
+        // Remove classes antigas
+        row.classList.remove("row-status-livre", "row-status-uso");
+
+        if (itemEstoque) {
+            if (itemEstoque.status === 'livre') {
+                row.classList.add("row-status-livre");
+            } else {
+                row.classList.add("row-status-uso");
+            }
+        }
+    });
+}
+
 // Clique nas linhas das tabelas de senhas
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -830,10 +870,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </script>
 
-<!-- Conexão com Firebase (se ainda for usar) -->
-<script type="module">
-  // import "./bd.js";   ← comente ou remova se não estiver usando firebase
-</script>
 <!-- MODAL DETALHES PDA -->
 <div id="modalPDA" class="modal-overlay hidden">
     <div class="modal-card">
@@ -854,7 +890,3 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
-
-
-
-
