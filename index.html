@@ -614,7 +614,7 @@ function renderTabelaAtivos(filtro = "") {
             : op.pda;
 
         tbody.innerHTML += `
-        <tr>
+        <tr data-opid="${op.id}">
             <td><strong>${pdaExibido}</strong></td>
             <td>${op.colab} <br><small style="color:#666">${op.login}</small></td>
             <td>${op.area}</td>
@@ -626,6 +626,45 @@ function renderTabelaAtivos(filtro = "") {
             </td>
         </tr>`;
     });
+
+    // Tornar as linhas clicáveis para abrir o modal com os dados do PDA
+    tbody.querySelectorAll('tr[data-opid]').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', (e) => {
+            // Ignora clique quando for no botão (Devolver)
+            if (e.target.closest('button')) return;
+            const idOp = row.getAttribute('data-opid');
+            abrirModalFromAtivo(Number(idOp));
+        });
+    });
+}
+
+// Abre o modal para uma operação ativa, tentando extrair login/senhas
+function abrirModalFromAtivo(idOp){
+    const op = operacoes.find(o => o.id === idOp);
+    if(!op) return;
+
+    const nomeReal = op.pda;
+    const nomeExibido = (op.numeroPdaInformado && op.numeroPdaInformado !== "-") ? op.numeroPdaInformado : op.pda;
+
+    let login = op.login || nomeReal;
+    let s1 = 'N/A', s2 = 'N/A', s3 = 'N/A';
+
+    // Procura nas tabelas de área por uma linha cujo primeiro campo seja igual ao nome real do PDA ou ao número informado
+    const areaRows = Array.from(document.querySelectorAll('.tabela-senhas tbody tr'));
+    const termosBusca = [nomeReal, nomeExibido].filter(Boolean).map(t => t.toUpperCase());
+    const match = areaRows.find(r => {
+        const texto = r.cells[0] && r.cells[0].innerText.trim().toUpperCase();
+        return texto && termosBusca.includes(texto);
+    });
+    if(match){
+        login = match.cells[1] ? match.cells[1].innerText.trim() : login;
+        s1 = match.cells[2] ? match.cells[2].innerText.trim() : 'N/A';
+        s2 = match.cells[3] ? match.cells[3].innerText.trim() : 'N/A';
+        s3 = match.cells[4] ? match.cells[4].innerText.trim() : 'N/A';
+    }
+
+    abrirModalPDA(nomeReal, login, s1, s2, s3, false);
 }
 
 function filtrarTabelaAtivos() {
@@ -764,6 +803,8 @@ function salvarDados(){
 // ====== MODAL DETALHES PDA ======
 
 function abrirModalPDA(nome, login, s1, s2, s3) {
+    // Parâmetro opcional showStart: se false, esconde o botão de iniciar operação
+    const showStart = (arguments.length >= 6) ? arguments[5] : true;
 
     document.getElementById("modalTitulo").innerText = nome;
 
@@ -811,11 +852,17 @@ function abrirModalPDA(nome, login, s1, s2, s3) {
 
     document.getElementById("modalConteudo").innerHTML = conteudo;
 
-    // BOTÃO INICIAR OPERAÇÃO
+    // BOTÃO INICIAR OPERAÇÃO (pode ser ocultado)
     const btn = document.getElementById("btnIniciarOperacaoModal");
-    btn.onclick = function(){
-        iniciarOperacaoViaModal(nome, login);
-    };
+    if(showStart){
+        btn.style.display = '';
+        btn.onclick = function(){
+            iniciarOperacaoViaModal(nome, login);
+        };
+    } else {
+        btn.style.display = 'none';
+        btn.onclick = null;
+    }
 
     document.getElementById("modalPDA").classList.remove("hidden");
 }
