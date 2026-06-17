@@ -414,91 +414,15 @@ tr:hover { background: #f8fafc; }
 <!-- Modal para Devolução / Toast -->
 <div id="toast" class="toast"></div>
 
-<script type="module">
-import { database, ref, set, get, onValue } from './bd.js';
-
+<script>
 // --- BANCO DE DADOS (LOCALSTORAGE) ---
 let estoque = JSON.parse(localStorage.getItem("db_estoque")) || []; 
 let operacoes = JSON.parse(localStorage.getItem("db_operacoes")) || [];
-let historico = JSON.parse(localStorage.getItem("db_historico")) || [];
 
 // --- INICIALIZAÇÃO ---
 let chartInstance = null;
 
-function normalizarLista(valor){
-    if (valor == null) return [];
-    if (Array.isArray(valor)) return valor;
-    if (typeof valor === 'object') return Object.values(valor).filter(item => item != null);
-    return [];
-}
-
-async function carregarDadosFirebase(){
-    try {
-        const estoqueSnap = await get(ref(database, 'estoque'));
-        if (estoqueSnap.exists()) estoque = normalizarLista(estoqueSnap.val());
-
-        const operacoesSnap = await get(ref(database, 'operacoes'));
-        if (operacoesSnap.exists()) operacoes = normalizarLista(operacoesSnap.val());
-
-        const historicoSnap = await get(ref(database, 'historico'));
-        if (historicoSnap.exists()) historico = normalizarLista(historicoSnap.val());
-    } catch (err) {
-        console.warn('Erro ao carregar dados do Firebase:', err);
-    }
-}
-
-function ouvirDadosFirebase(){
-    onValue(ref(database, 'estoque'), snapshot => {
-        estoque = normalizarLista(snapshot.val());
-        atualizarDashboard();
-        renderTabelaEstoque();
-        atualizarStatusTabelasArea();
-    });
-
-    onValue(ref(database, 'operacoes'), snapshot => {
-        operacoes = normalizarLista(snapshot.val());
-        renderTabelaAtivos(document.getElementById("filtroAtivos")?.value || "");
-        atualizarDashboard();
-    });
-
-    onValue(ref(database, 'historico'), snapshot => {
-        historico = normalizarLista(snapshot.val());
-        renderTabelaHistorico();
-    });
-}
-
-function paraObjetoPorId(lista){
-    return lista.reduce((acc, item) => {
-        if (item && item.id != null) acc[item.id] = item;
-        return acc;
-    }, {});
-}
-
-async function salvarDadosFirebase(){
-    try {
-        console.log('salvarDadosFirebase arrays', {
-            estoque,
-            operacoes,
-            historico
-        });
-        await set(ref(database, 'estoque'), estoque);
-        await set(ref(database, 'operacoes'), operacoes);
-        await set(ref(database, 'historico'), historico);
-        console.log('Firebase salvo com sucesso');
-    } catch (err) {
-        console.error('Firebase sync error:', err);
-        const errCode = err?.code || 'unknown';
-        const errMsg = err?.message || 'Erro desconhecido';
-        toast(`Erro Firebase: ${errCode} - ${errMsg}`, 'error');
-        if (errCode === 'permission-denied') {
-            console.warn('Verifique as regras do Firebase Realtime Database e permita escrita não autenticada durante o desenvolvimento.');
-        }
-    }
-}
-
-document.addEventListener("DOMContentLoaded", async () => {
-    await carregarDadosFirebase();
-    ouvirDadosFirebase();
+document.addEventListener("DOMContentLoaded", () => {
     atualizarTudo();
 });
 
@@ -534,7 +458,7 @@ function gerarRelatorio(){
 function limparHistorico(){
     if(!confirm("Tem certeza que deseja LIMPAR TODO o histórico de operações?\nEssa ação não pode ser desfeita.")) return;
     
-    historico = [];
+    operacoes = operacoes.filter(op => op.status === 'ativo');
     salvarDados();
     toast("Histórico de operações concluídas foi limpo!", 'info');
     atualizarTudo();
@@ -631,17 +555,11 @@ function devolverPDA(idOp){
     const opIndex = operacoes.findIndex(o => o.id === idOp);
     if(opIndex === -1) return;
 
-    const operacaoConcluida = {
-        ...operacoes[opIndex],
-        fim: new Date().toLocaleString(),
-        qtd: qtd,
-        status: 'concluido'
-    };
+    operacoes[opIndex].status = 'concluido';
+    operacoes[opIndex].fim = new Date().toLocaleString();
+    operacoes[opIndex].qtd = qtd;
 
-    historico.push(operacaoConcluida);
-    operacoes.splice(opIndex, 1);
-
-    const pdaId = operacaoConcluida.pda;
+    const pdaId = operacoes[opIndex].pda;
     const estIndex = estoque.findIndex(e => e.id === pdaId);
     if(estIndex > -1) estoque[estIndex].status = 'livre';
 
@@ -726,51 +644,27 @@ function abrirModalFromAtivo(idOp){
     const op = operacoes.find(o => o.id === idOp);
     if(!op) return;
 
-    const nome = (op.numeroPdaInformado && op.numeroPdaInformado !== "-") ? op.numeroPdaInformado : op.pda;
+    const nomeReal = op.pda;
+    const nomeExibido = (op.numeroPdaInformado && op.numeroPdaInformado !== "-") ? op.numeroPdaInformado : op.pda;
 
-    let login = op.login || nome;
+    let login = op.login || nomeReal;
     let s1 = 'N/A', s2 = 'N/A', s3 = 'N/A';
 
-    // Busca aprimorada: normaliza texto (remove acentos, pontos e espaços extras) e tenta igualdade ou contains
-    function _normalizeText(t){
-        if(!t) return '';
-        try{
-            return t.toString()
-                .normalize('NFD')
-                .replace(/\p{Diacritic}/gu, '')
-                .replace(/\./g, '')
-                .replace(/\s+/g, ' ')
-                .trim()
-                .toLowerCase();
-        } catch(e){
-            return t.toString().trim().toLowerCase();
-        }
-    }
-
+    // Procura nas tabelas de área por uma linha cujo primeiro campo seja igual ao nome real do PDA ou ao número informado
     const areaRows = Array.from(document.querySelectorAll('.tabela-senhas tbody tr'));
-    const nNome = _normalizeText(nome);
-    const nLogin = _normalizeText(op.login || '');
-
+    const termosBusca = [nomeReal, nomeExibido].filter(Boolean).map(t => t.toUpperCase());
     const match = areaRows.find(r => {
-        const c0 = r.cells[0] ? _normalizeText(r.cells[0].innerText) : '';
-        const c1 = r.cells[1] ? _normalizeText(r.cells[1].innerText) : '';
-        if(!c0 && !c1) return false;
-        // só usa includes quando o termo de busca não estiver vazio
-        if(c0 === nNome) return true;
-        if(nLogin && c1 === nLogin) return true;
-        if(nNome && c0.includes(nNome)) return true;
-        if(nLogin && c1.includes(nLogin)) return true;
-        return false;
+        const texto = r.cells[0] && r.cells[0].innerText.trim().toUpperCase();
+        return texto && termosBusca.includes(texto);
     });
-
     if(match){
-        login = match.cells[1] && match.cells[1].innerText.trim() ? match.cells[1].innerText.trim() : login;
-        s1 = match.cells[2] && match.cells[2].innerText.trim() ? match.cells[2].innerText.trim() : 'N/A';
-        s2 = match.cells[3] && match.cells[3].innerText.trim() ? match.cells[3].innerText.trim() : 'N/A';
-        s3 = match.cells[4] && match.cells[4].innerText.trim() ? match.cells[4].innerText.trim() : 'N/A';
+        login = match.cells[1] ? match.cells[1].innerText.trim() : login;
+        s1 = match.cells[2] ? match.cells[2].innerText.trim() : 'N/A';
+        s2 = match.cells[3] ? match.cells[3].innerText.trim() : 'N/A';
+        s3 = match.cells[4] ? match.cells[4].innerText.trim() : 'N/A';
     }
 
-    abrirModalPDA(nome, login, s1, s2, s3, false);
+    abrirModalPDA(nomeReal, login, s1, s2, s3, false);
 }
 
 function filtrarTabelaAtivos() {
@@ -804,17 +698,17 @@ function renderTabelaHistorico(){
     
     const termo = document.getElementById("filtroHistorico")?.value.toLowerCase() || "";
     
-    let historicoFiltrado = historico;
+    let historico = operacoes.filter(o => o.status === 'concluido');
 
     if(termo){
-        historicoFiltrado = historico.filter(op => 
+        historico = historico.filter(op => 
             op.colab.toLowerCase().includes(termo) || 
             op.area.toLowerCase().includes(termo) || 
             op.pda.toLowerCase().includes(termo)
         );
     }
 
-    historicoFiltrado.slice().reverse().slice(0, 50).forEach(op => {
+    historico.reverse().slice(0, 50).forEach(op => {
         tbody.innerHTML += `
         <tr>
             <td><small>${op.fim}</small></td>
@@ -858,7 +752,7 @@ function exportarExcel(){
     let csvContent = "data:text/csv;charset=utf-8,";
     csvContent += "Data Saida;Data Volta;Colaborador;Login;Area;PDA;Producao;Status\n";
 
-    historico.forEach(op => {
+    operacoes.forEach(op => {
         const row = `${op.inicio};${op.fim || ''};${op.colab};${op.login};${op.area};${op.pda};${op.qtd};${op.status}`;
         csvContent += row + "\r\n";
     });
@@ -904,8 +798,6 @@ function iniciarOperacaoViaModal(nomePDA, login){
 function salvarDados(){
     localStorage.setItem("db_estoque", JSON.stringify(estoque));
     localStorage.setItem("db_operacoes", JSON.stringify(operacoes));
-    localStorage.setItem("db_historico", JSON.stringify(historico));
-    salvarDadosFirebase();
 }
 
 // ====== MODAL DETALHES PDA ======
@@ -1022,21 +914,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
 });
-
-// Expor funções globais para os atributos onclick/oninput do HTML
-window.abrirAba = abrirAba;
-window.iniciarOperacao = iniciarOperacao;
-window.filtrarTabelaAtivos = filtrarTabelaAtivos;
-window.adicionarAoEstoque = adicionarAoEstoque;
-window.gerarRelatorio = gerarRelatorio;
-window.limparHistorico = limparHistorico;
-window.renderTabelaHistorico = renderTabelaHistorico;
-window.exportarExcel = exportarExcel;
-window.devolverPDA = devolverPDA;
-window.removerDoEstoque = removerDoEstoque;
-window.fecharModalPDA = fecharModalPDA;
-window.abrirModalPDA = abrirModalPDA;
-window.abrirModalFromAtivo = abrirModalFromAtivo;
 
 </script>
 
